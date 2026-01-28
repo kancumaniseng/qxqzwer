@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cost Engineering Dashboard 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
+
+        /* Header dengan Gradient Biru Corporate */
+        .dashboard-header { 
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%); 
+            padding: 30px 40px; 
+            color: white; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .header-content { max-width: 1400px; margin: 0 auto; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header-title { display: flex; align-items: center; gap: 15px; }
+        .logo { font-size: 36px; }
+        .header-title h1 { font-size: 32px; font-weight: 700; letter-spacing: 1px; }
+        .header-subtitle { font-size: 14px; opacity: 0.95; margin-bottom: 5px; }
+        .header-update { font-size: 13px; opacity: 0.9; }
+        .refresh-btn { 
+            background: rgba(255,255,255,0.2); 
+            color: white; 
+            padding: 10px 20px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .refresh-btn:hover { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.5); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .refresh-icon { font-size: 16px; transition: transform 0.3s ease; }
+        .refresh-icon.spinning { animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Container */
+        .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 30px 40px; }
+
+        /* TAB NAVIGATION */
+        .tab-navigation { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 30px; 
+            background: white; 
+            padding: 10px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .tab-btn { 
+            padding: 12px 24px; 
+            border: none; 
+            background: transparent; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover { background: #f1f5f9; color: #334155; }
+        .tab-btn.active { background: #3b82f6; color: white; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+
+        /* KPI Cards */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .kpi-card.blue { border-left-color: #3b82f6; }
+        .kpi-card.green { border-left-color: #10b981; }
+        .kpi-card.orange { border-left-color: #f59e0b; }
+        .kpi-card.red { border-left-color: #ef4444; }
+        .kpi-card.purple { border-left-color: #8b5cf6; }
+        .kpi-card.cyan { border-left-color: #06b6d4; }
+        .kpi-label { 
+            font-size: 12px; 
+            color: #64748b; 
+            text-transform: uppercase; 
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px; 
+        }
+        .kpi-value { 
+            font-size: 36px; 
+            font-weight: 700; 
+            color: #1e293b; 
+            margin-bottom: 8px; 
+            line-height: 1;
+        }
+        .kpi-subtitle { font-size: 13px; color: #94a3b8; }
+
+        /* Main Card */
+        .main-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            padding-bottom: 20px; 
+            border-bottom: 2px solid #f1f5f9; 
+        }
+        .card-title { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Table Styles */
+        .data-table { 
+            width: 100%; 
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .data-table thead { background: #f8fafc; }
+        .data-table th { 
+            padding: 14px 16px; 
+            text-align: left; 
+            color: #475569; 
+            font-weight: 700; 
+            font-size: 12px; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .data-table td { 
+            padding: 16px; 
+            border-bottom: 1px solid #f1f5f9; 
+            color: #334155;
+            font-size: 14px;
+        }
+        .data-table tbody tr { transition: all 0.2s ease; }
+        .data-table tbody tr:hover { background: #f8fafc; }
+
+        /* Status Badges */
+        .status-badge { 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: inline-block;
+        }
+        .status-on-track { background: #d1fae5; color: #065f46; }
+        .status-at-risk { background: #fed7aa; color: #92400e; }
+        .status-delayed { background: #fee2e2; color: #991b1b; }
+        .status-completed { background: #dbeafe; color: #1e40af; }
+
+        /* Progress Bar */
+        .progress-container { display: flex; align-items: center; gap: 12px; }
+        .progress-bar { 
+            flex: 1; 
+            height: 10px; 
+            background: #e2e8f0; 
+            border-radius: 10px; 
+            overflow: hidden;
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%); 
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+        .progress-text { 
+            font-size: 13px; 
+            font-weight: 700; 
+            color: #475569;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        /* Buttons */
+        .btn { 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+        /* Loading & Messages */
+        .loading { 
+            text-align: center; 
+            padding: 60px 40px; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .loading-spinner { 
+            border: 4px solid #f1f5f9; 
+            border-top: 4px solid #3b82f6; 
+            border-radius: 50%; 
+            width: 48px; 
+            height: 48px; 
+            animation: spin 1s linear infinite; 
+            margin: 0 auto 20px; 
+        }
+        .message { 
+            padding: 16px 20px; 
+            border-radius: 8px; 
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .message-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .message-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .message-info { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+
+        /* Filter Chips */
+        .filter-section { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 25px; 
+            flex-wrap: wrap;
+        }
+        .filter-chip { 
+            padding: 8px 18px; 
+            border: 2px solid #e2e8f0; 
+            background: white; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+        .filter-chip:hover { border-color: #cbd5e1; background: #f8fafc; }
+        .filter-chip.active { 
+            border-color: #3b82f6; 
+            background: #3b82f6; 
+            color: white;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+
+        /* Data Source Info */
+        .data-info { 
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); 
+            color: #1e40af; 
+            padding: 14px 20px; 
+            border-radius: 10px; 
+            font-size: 13px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        /* Version Badge */
+        .version-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+            z-index: 999;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) { 
+            .dashboard-container { padding: 20px; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+            .header-top { flex-direction: column; align-items: flex-start; gap: 15px; }
+        }
+        @media (max-width: 640px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .tab-navigation { flex-wrap: wrap; }
+        }
+
+        /* No Data State */
+        .no-data { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #94a3b8;
+        }
+        .no-data-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+        .no-data-text { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .no-data-subtext { font-size: 14px; }
+    </style>
+</head>
+<body>
+    <!-- Version Badge -->
+    <div class="version-badge">v2.1 Multi-Sheet</div>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-top">
+                <div class="header-title">
+                    <span class="logo">📊</span>
+                    <div>
+                        <h1>COST ENGINEERING DASHBOARD 2026</h1>
+                        <div class="header-subtitle">Cost Engineering Project Portfolio | PT Pertamina</div>
+                        <div class="header-update">Updated: <span id="headerUpdate">Loading...</span></div>
+                    </div>
+                </div>
+                <button class="refresh-btn" id="refreshBtn" onclick="loadAllData()">
+                    <span class="refresh-icon" id="refreshIcon">🔄</span>
+                    <span id="refreshText">Refresh Data</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        <!-- TAB NAVIGATION -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('projects')">
+                📋 Dashboard Projects
+            </button>
+            <button class="tab-btn" onclick="switchTab('team')">
+                👥 Team Performance
+            </button>
+            <button class="tab-btn" onclick="switchTab('owner')">
+                📈 Owner Rankings
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p style="color: #64748b; font-weight: 600;">Loading data dari Google Sheets...</p>
+        </div>
+
+        <!-- Messages -->
+        <div id="messageContainer"></div>
+
+        <!-- Projects Tab -->
+        <div id="projectsTab" class="tab-content">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-label">Total Projects</div>
+                    <div class="kpi-value" id="totalProjects">0</div>
+                    <div class="kpi-subtitle">Q1 2026 Portfolio</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">Completed</div>
+                    <div class="kpi-value" id="completedProjects">0</div>
+                    <div class="kpi-subtitle" id="completionRate">0% Done Rate</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">Active</div>
+                    <div class="kpi-value" id="activeProjects">0</div>
+                    <div class="kpi-subtitle">In Progress</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-label">Critical/Overdue</div>
+                    <div class="kpi-value" id="criticalProjects">0</div>
+                    <div class="kpi-subtitle">Needs Attention</div>
+                </div>
+                <div class="kpi-card purple">
+                    <div class="kpi-label">Total Barecost</div>
+                    <div class="kpi-value" id="totalBarecost">0</div>
+                    <div class="kpi-subtitle">IDR (Trillion)</div>
+                </div>
+                <div class="kpi-card cyan">
+                    <div class="kpi-label">Avg GPM</div>
+                    <div class="kpi-value" id="avgGPM">0%</div>
+                    <div class="kpi-subtitle">Penawaran</div>
+                </div>
+            </div>
+
+            <div class="data-info">
+                <span>📊 Data source: Google Sheets (Multi-sheet) | Last updated: <strong id="lastUpdate">-</strong></span>
+                <span><strong id="rowCount">0</strong> projects loaded</span>
+            </div>
+
+            <div class="main-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        📋 Active Projects
+                        <span style="font-size: 14px; font-weight: 500; color: #64748b;" id="activeCount">(0)</span>
+                    </h2>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">NO</th>
+                                <th style="min-width: 300px;">JUDUL PEKERJAAN</th>
+                                <th style="width: 150px;">OWNER</th>
+                                <th style="width: 100px;">PIC</th>
+                                <th style="width: 120px;">STATUS</th>
+                                <th style="width: 150px;">BARECOST</th>
+                                <th style="width: 150px;">PENAWARAN</th>
+                                <th style="width: 100px;">GPM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectTableBody">
+                            <tr>
+                                <td colspan="8" class="no-data">
+                                    <div class="no-data-icon">📭</div>
+                                    <div class="no-data-text">No data available</div>
+                                    <div class="no-data-subtext">Click Refresh Data to load</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Tab -->
+        <div id="teamTab" class="tab-content" style="display: none;">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-label">Total Team Members</div>
+                    <div class="kpi-value" id="totalTeam">0</div>
+                    <div class="kpi-subtitle">Cost Engineering Team</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-label">Overload</div>
+                    <div class="kpi-value" id="overloadTeam">0</div>
+                    <div class="kpi-subtitle">High Workload</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">Balanced Load</div>
+                    <div class="kpi-value" id="balancedTeam">0</div>
+                    <div class="kpi-subtitle">OK Status</div>
+                </div>
+                <div class="kpi-card orange">
+                    <div class="kpi-label">Underload</div>
+                    <div class="kpi-value" id="underloadTeam">0</div>
+                    <div class="kpi-subtitle">Can Take More</div>
+                </div>
+            </div>
+
+            <div class="main-card">
+                <div class="card-header">
+                    <h2 class="card-title">👥 Team Performance Analysis</h2>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>PIC NAME</th>
+                                <th>CODE</th>
+                                <th>SPECIALIZATION</th>
+                                <th>ONGOING</th>
+                                <th>SUPPORT</th>
+                                <th>DONE</th>
+                                <th>TOTAL</th>
+                                <th>LOAD STATUS</th>
+                                <th>WIN RATE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamTableBody">
+                            <tr>
+                                <td colspan="9" class="no-data">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Owner Tab -->
+        <div id="ownerTab" class="tab-content" style="display: none;">
+            <div class="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-label">Total Companies</div>
+                    <div class="kpi-value" id="totalOwners">0</div>
+                    <div class="kpi-subtitle">Active Owners</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-label">Top Owner (Projects)</div>
+                    <div class="kpi-value" id="topOwnerProjects">0</div>
+                    <div class="kpi-subtitle" id="topOwnerName">-</div>
+                </div>
+                <div class="kpi-card purple">
+                    <div class="kpi-label">Top Owner (Value)</div>
+                    <div class="kpi-value" id="topOwnerValue">0T</div>
+                    <div class="kpi-subtitle" id="topOwnerValueName">-</div>
+                </div>
+                <div class="kpi-card cyan">
+                    <div class="kpi-label">Highest GPM</div>
+                    <div class="kpi-value" id="highestGPM">0%</div>
+                    <div class="kpi-subtitle" id="highestGPMOwner">-</div>
+                </div>
+            </div>
+
+            <div class="main-card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 Owner Performance Metrics</h2>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>NO</th>
+                                <th>COMPANY NAME</th>
+                                <th>CODE</th>
+                                <th>PROJECTS</th>
+                                <th>BARECOST (M)</th>
+                                <th>PENAWARAN (M)</th>
+                                <th>KONTRAK (M)</th>
+                                <th>GPM PENAWARAN</th>
+                                <th>GPM KONTRAK</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ownerTableBody">
+                            <tr>
+                                <td colspan="9" class="no-data">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CSV URLs - Publish sebagai CSV dari Google Sheets
+        var SHEET_URL_MAIN = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSE4iCfy-ul3AvvtRn8crrMl-U8XTbcFQBdXSYTsEeMsUOfrzrmPH451fngepPaiT0wJ2RU11su9FD5/pub?output=csv';
+        var SHEET_ID = '1rV0mWOTuLFE2lzvDx8FNCVJ7-VqiBfQYFBKL_6TY4os'; // Ganti dengan Sheet ID Anda
+
+        // Construct URLs untuk sheet lain
+        var SHEET_URL_OWNER = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&sheet=OWNER%20LIST';
+        var SHEET_URL_PIC = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&sheet=PIC';
+
+        var projects = [];
+        var owners = [];
+        var pics = [];
+        var currentTab = 'projects';
+        var isLoading = false;
+
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard v2.1 Multi-Sheet loaded!');
+            var cached = localStorage.getItem('dashboardData');
+            if (cached) {
+                var data = JSON.parse(cached);
+                projects = data.projects || [];
+                owners = data.owners || [];
+                pics = data.pics || [];
+                updateAllViews();
+            }
+            loadAllData();
+        });
+
+        function loadAllData() {
+            if (isLoading) return;
+            isLoading = true;
+
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('refreshBtn').disabled = true;
+            document.getElementById('refreshIcon').classList.add('spinning');
+            document.getElementById('refreshText').textContent = 'Loading...';
+
+            Promise.all([
+                fetch(SHEET_URL_MAIN).then(r => r.text()),
+                fetch(SHEET_URL_OWNER).then(r => r.text()),
+                fetch(SHEET_URL_PIC).then(r => r.text())
+            ])
+            .then(function(results) {
+                // Parse Main Sheet
+                var mainRows = parseCSV(results[0]);
+                projects = [];
+                for (var i = 3; i < mainRows.length; i++) {
+                    var row = mainRows[i];
+                    if (!row[0] || row[0].trim() === '') continue;
+
+                    projects.push({
+                        no: row[0],
+                        judul: row[1] || '-',
+                        direktorat: row[2] || '-',
+                        owner: row[3] || '-',
+                        pic: row[4] || '-',
+                        status: row[8] || '-',
+                        progress: row[9] || '0',
+                        barecost: parseFloat(row[15]) || 0,
+                        penawaran: parseFloat(row[16]) || 0,
+                        kontrak: parseFloat(row[17]) || 0,
+                        gpmOffer: row[21] || '-',
+                        gpmKontrak: row[22] || '-',
+                        statusTender: row[24] || '-'
+                    });
+                }
+
+                // Parse Owner Sheet
+                var ownerRows = parseCSV(results[1]);
+                owners = [];
+                for (var i = 4; i < ownerRows.length; i++) {
+                    var row = ownerRows[i];
+                    if (!row[0] || row[0].trim() === '' || row[0] === 'TOTAL') continue;
+
+                    owners.push({
+                        no: row[0],
+                        nama: row[1] || '-',
+                        jumlahProyek: parseInt(row[2]) || 0,
+                        barecost: parseFloat(row[3]) || 0,
+                        penawaran: parseFloat(row[4]) || 0,
+                        kontrak: parseFloat(row[5]) || 0,
+                        gpmPenawaran: row[6] || '-',
+                        gpmKontrak: row[7] || '-',
+                        kode: row[8] || '-'
+                    });
+                }
+
+                // Parse PIC Sheet
+                var picRows = parseCSV(results[2]);
+                pics = [];
+                for (var i = 4; i < picRows.length; i++) {
+                    var row = picRows[i];
+                    if (!row[0] || row[0].trim() === '') continue;
+
+                    pics.push({
+                        no: row[0],
+                        nama: row[1] || '-',
+                        ongoing: parseInt(row[2]) || 0,
+                        kode: row[3] || '-',
+                        spesialisasi: row[4] || '-',
+                        support: parseInt(row[5]) || 0,
+                        ongoingSupport: parseFloat(row[6]) || 0,
+                        done: parseInt(row[7]) || 0,
+                        total: parseFloat(row[8]) || 0,
+                        loadStatus: row[9] || '-',
+                        loadStatusAll: row[10] || '-',
+                        totalAll: parseFloat(row[11]) || 0,
+                        winRate: row[12] || '0%',
+                        gpmGenerated: row[13] || '0%'
+                    });
+                }
+
+                var now = new Date().toLocaleString('id-ID');
+                localStorage.setItem('dashboardData', JSON.stringify({projects: projects, owners: owners, pics: pics}));
+                localStorage.setItem('lastUpdate', now);
+
+                updateAllViews();
+                showMessage('success', 'Loaded: ' + projects.length + ' projects, ' + owners.length + ' owners, ' + pics.length + ' PICs');
+            })
+            .catch(function(error) {
+                console.error('Load error:', error);
+                showMessage('error', 'Failed to load: ' + error.message);
+            })
+            .finally(function() {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('refreshBtn').disabled = false;
+                document.getElementById('refreshIcon').classList.remove('spinning');
+                document.getElementById('refreshText').textContent = 'Refresh Data';
+                isLoading = false;
+            });
+        }
+
+        function parseCSV(text) {
+            var rows = [];
+            var row = [];
+            var cell = '';
+            var inQuotes = false;
+
+            for (var i = 0; i < text.length; i++) {
+                var c = text[i];
+                var next = text[i + 1];
+
+                if (c === '"') {
+                    if (inQuotes && next === '"') {
+                        cell += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (c === ',' && !inQuotes) {
+                    row.push(cell.trim());
+                    cell = '';
+                } else if ((c === '\n' || c === '\r') && !inQuotes) {
+                    if (c === '\r' && next === '\n') i++;
+                    row.push(cell.trim());
+                    rows.push(row);
+                    row = [];
+                    cell = '';
+                } else {
+                    cell += c;
+                }
+            }
+
+            if (cell || row.length) {
+                row.push(cell.trim());
+                rows.push(row);
+            }
+
+            return rows;
+        }
+
+        function updateAllViews() {
+            updateProjectKPIs();
+            renderProjectsTable();
+            updateTeamKPIs();
+            renderTeamTable();
+            updateOwnerKPIs();
+            renderOwnerTable();
+
+            var lastUpdate = localStorage.getItem('lastUpdate') || '-';
+            document.getElementById('lastUpdate').textContent = lastUpdate;
+            document.getElementById('headerUpdate').textContent = lastUpdate;
+            document.getElementById('rowCount').textContent = projects.length;
+        }
+
+        function updateProjectKPIs() {
+            var total = projects.length;
+            var completed = projects.filter(function(p) { return p.statusTender === 'W'; }).length;
+            var active = projects.filter(function(p) { return p.statusTender !== 'W' && p.statusTender !== 'L'; }).length;
+            var critical = projects.filter(function(p) { return p.status && p.status.toLowerCase().indexOf('delay') >= 0; }).length;
+
+            var totalBarecost = 0;
+            var totalGPM = 0;
+            var gpmCount = 0;
+
+            projects.forEach(function(p) {
+                totalBarecost += p.barecost;
+                var gpm = parseFloat(p.gpmOffer);
+                if (!isNaN(gpm)) {
+                    totalGPM += gpm;
+                    gpmCount++;
+                }
+            });
+
+            var avgGPM = gpmCount > 0 ? (totalGPM / gpmCount).toFixed(2) : 0;
+            var compRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('totalProjects').textContent = total;
+            document.getElementById('completedProjects').textContent = completed;
+            document.getElementById('completionRate').textContent = compRate + '% Win Rate';
+            document.getElementById('activeProjects').textContent = active;
+            document.getElementById('criticalProjects').textContent = critical;
+            document.getElementById('totalBarecost').textContent = (totalBarecost / 1000000000000).toFixed(2) + 'T';
+            document.getElementById('avgGPM').textContent = avgGPM + '%';
+        }
+
+        function renderProjectsTable() {
+            var tbody = document.getElementById('projectTableBody');
+
+            if (projects.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No data</td></tr>';
+                return;
+            }
+
+            var html = '';
+            projects.forEach(function(p, idx) {
+                var statusClass = 'status-on-track';
+                var barecostM = (p.barecost / 1000000).toFixed(0);
+                var penawaranM = (p.penawaran / 1000000).toFixed(0);
+
+                html += '<tr>';
+                html += '<td style="font-weight: 700;">' + (idx + 1) + '</td>';
+                html += '<td><strong>' + p.judul + '</strong></td>';
+                html += '<td>' + p.owner + '</td>';
+                html += '<td>' + p.pic + '</td>';
+                html += '<td><span class="status-badge ' + statusClass + '">' + p.status + '</span></td>';
+                html += '<td style="text-align: right;">' + barecostM + 'M</td>';
+                html += '<td style="text-align: right;">' + penawaranM + 'M</td>';
+                html += '<td style="font-weight: 600;">' + p.gpmOffer + '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('activeCount').textContent = '(' + projects.length + ')';
+        }
+
+        function updateTeamKPIs() {
+            var total = pics.length;
+            var overload = pics.filter(function(p) { return p.loadStatus && p.loadStatus.indexOf('OVERLOAD') >= 0; }).length;
+            var balanced = pics.filter(function(p) { return p.loadStatus && p.loadStatus.indexOf('OK') >= 0; }).length;
+            var underload = pics.filter(function(p) { return p.loadStatus && p.loadStatus.indexOf('UNDERLOAD') >= 0; }).length;
+
+            document.getElementById('totalTeam').textContent = total;
+            document.getElementById('overloadTeam').textContent = overload;
+            document.getElementById('balancedTeam').textContent = balanced;
+            document.getElementById('underloadTeam').textContent = underload;
+        }
+
+        function renderTeamTable() {
+            var tbody = document.getElementById('teamTableBody');
+
+            if (pics.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">No data</td></tr>';
+                return;
+            }
+
+            var html = '';
+            pics.forEach(function(p) {
+                var loadClass = p.loadStatus.indexOf('OVERLOAD') >= 0 ? 'status-delayed' : 
+                               p.loadStatus.indexOf('OK') >= 0 ? 'status-on-track' : 'status-completed';
+
+                html += '<tr>';
+                html += '<td><strong>' + p.nama + '</strong></td>';
+                html += '<td>' + p.kode + '</td>';
+                html += '<td>' + p.spesialisasi + '</td>';
+                html += '<td style="font-weight: 700;">' + p.ongoing + '</td>';
+                html += '<td>' + p.support + '</td>';
+                html += '<td style="color: #10b981; font-weight: 700;">' + p.done + '</td>';
+                html += '<td style="font-weight: 700;">' + p.total + '</td>';
+                html += '<td><span class="status-badge ' + loadClass + '">' + p.loadStatus + '</span></td>';
+                html += '<td style="font-weight: 600;">' + p.winRate + '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function updateOwnerKPIs() {
+            if (owners.length === 0) return;
+
+            var topProjects = owners[0];
+            var topValue = owners.reduce(function(max, o) {
+                return o.barecost > max.barecost ? o : max;
+            }, owners[0]);
+            var topGPM = owners.reduce(function(max, o) {
+                var gpm = parseFloat(o.gpmPenawaran);
+                var maxGpm = parseFloat(max.gpmPenawaran);
+                return gpm > maxGpm ? o : max;
+            }, owners[0]);
+
+            document.getElementById('totalOwners').textContent = owners.length;
+            document.getElementById('topOwnerProjects').textContent = topProjects.jumlahProyek;
+            document.getElementById('topOwnerName').textContent = topProjects.nama;
+            document.getElementById('topOwnerValue').textContent = (topValue.barecost / 1000000000000).toFixed(2) + 'T';
+            document.getElementById('topOwnerValueName').textContent = topValue.nama;
+            document.getElementById('highestGPM').textContent = topGPM.gpmPenawaran;
+            document.getElementById('highestGPMOwner').textContent = topGPM.nama;
+        }
+
+        function renderOwnerTable() {
+            var tbody = document.getElementById('ownerTableBody');
+
+            if (owners.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">No data</td></tr>';
+                return;
+            }
+
+            var html = '';
+            owners.forEach(function(o) {
+                var barecostM = (o.barecost / 1000000).toFixed(0);
+                var penawaranM = (o.penawaran / 1000000).toFixed(0);
+                var kontrakM = (o.kontrak / 1000000).toFixed(0);
+
+                html += '<tr>';
+                html += '<td>' + o.no + '</td>';
+                html += '<td><strong>' + o.nama + '</strong></td>';
+                html += '<td>' + o.kode + '</td>';
+                html += '<td style="font-weight: 700;">' + o.jumlahProyek + '</td>';
+                html += '<td style="text-align: right;">' + barecostM + '</td>';
+                html += '<td style="text-align: right;">' + penawaranM + '</td>';
+                html += '<td style="text-align: right;">' + kontrakM + '</td>';
+                html += '<td style="font-weight: 600; color: #10b981;">' + o.gpmPenawaran + '</td>';
+                html += '<td style="font-weight: 600; color: #3b82f6;">' + o.gpmKontrak + '</td>';
+                html += '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            var tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            event.target.classList.add('active');
+
+            document.getElementById('projectsTab').style.display = tab === 'projects' ? 'block' : 'none';
+            document.getElementById('teamTab').style.display = tab === 'team' ? 'block' : 'none';
+            document.getElementById('ownerTab').style.display = tab === 'owner' ? 'block' : 'none';
+        }
+
+        function showMessage(type, text) {
+            var container = document.getElementById('messageContainer');
+            var msgClass = type === 'success' ? 'message-success' : type === 'error' ? 'message-error' : 'message-info';
+            container.innerHTML = '<div class="message ' + msgClass + '">' + text + '</div>';
+            setTimeout(function() { container.innerHTML = ''; }, 5000);
+        }
+    </script>
+</body>
+</html>
