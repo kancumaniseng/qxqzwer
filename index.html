@@ -11,11 +11,7 @@
         .dashboard-header { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 25px; }
         .dashboard-header h1 { color: #333; font-size: 28px; margin-bottom: 5px; }
         .dashboard-header p { color: #666; font-size: 14px; }
-        .info-box { background: #fef3c7; border: 2px solid #f59e0b; color: #92400e; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
-        .info-box h3 { margin-bottom: 10px; }
-        .info-box ul { margin-left: 20px; margin-top: 10px; }
-        .info-box li { margin: 5px 0; }
-        .info-box code { background: #fed7aa; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
         .loading { text-align: center; padding: 40px; background: white; border-radius: 12px; margin: 20px 0; }
         .loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -35,7 +31,10 @@
         .btn-primary:hover { background: #5568d3; }
         .btn-danger { background: #ef4444; color: white; }
         .btn-success { background: #10b981; color: white; }
+        .btn-info { background: #3b82f6; color: white; }
+        .btn-info:hover { background: #2563eb; }
         .btn-sm { padding: 4px 8px; font-size: 12px; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .project-table { width: 100%; border-collapse: collapse; }
         .project-table thead { background: #f8f9fa; }
         .project-table th { padding: 12px; text-align: left; color: #666; font-weight: 600; font-size: 13px; text-transform: uppercase; }
@@ -78,19 +77,18 @@
         .filter-section { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
         .filter-btn { padding: 8px 16px; border: 2px solid #e5e7eb; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
         .filter-btn:hover, .filter-btn.active { border-color: #667eea; background: #667eea; color: white; }
-        .refresh-btn { background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .refresh-btn { background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .refresh-btn:hover { background: #059669; }
+        .refresh-btn:disabled { background: #9ca3af; cursor: not-allowed; }
         .error-message { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin: 20px 0; }
         .success-message { background: #d1fae5; color: #065f46; padding: 15px; border-radius: 8px; margin: 20px 0; }
         .action-icons { display: flex; gap: 8px; }
         .icon-btn { padding: 6px 10px; border: none; background: #f0f0f0; border-radius: 4px; cursor: pointer; }
         .icon-btn:hover { background: #667eea; color: white; }
         .data-source-info { background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .upload-section { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 3px 15px rgba(0,0,0,0.1); }
-        .upload-area { border: 2px dashed #667eea; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
-        .upload-area:hover { background: #f8f9fa; border-color: #5568d3; }
-        .upload-area.dragover { background: #e0e7ff; border-color: #4f46e5; }
         @media (max-width: 968px) { .main-content { grid-template-columns: 1fr; } }
+        .refresh-icon { display: inline-block; transition: transform 0.3s ease; }
+        .refresh-icon.spinning { animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
@@ -101,37 +99,26 @@
                     <h1>Cost Engineering Dashboard</h1>
                     <p>Project Monitoring & Team Workload Management</p>
                 </div>
+                <div class="header-actions">
+                    <button class="refresh-btn" id="refreshBtn" onclick="loadGoogleSheetData()">
+                        <span class="refresh-icon" id="refreshIcon">🔄</span>
+                        <span id="refreshText">Refresh Data</span>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="info-box">
-            <h3>⚠️ CORS Policy Issue - Solusi:</h3>
-            <p>Browser memblokir akses langsung ke Google Sheets dari file HTML lokal. Ada 3 cara:</p>
-            <ul>
-                <li><strong>Cara 1 (RECOMMENDED):</strong> Upload file HTML ini ke web hosting (GitHub Pages, Netlify, atau hosting lain) - CORS akan otomatis work</li>
-                <li><strong>Cara 2:</strong> Download CSV dari Google Sheets, lalu upload di dashboard ini menggunakan fitur upload di bawah</li>
-                <li><strong>Cara 3:</strong> Install extension browser "Allow CORS" (Chrome) atau "CORS Everywhere" (Firefox) - temporary solution</li>
-            </ul>
-            <p style="margin-top: 15px;"><strong>Link Google Sheets CSV:</strong><br>
-            <code>https://docs.google.com/spreadsheets/d/e/2PACX-1vSE4iCfy-ul3AvvtRn8crrMl-U8XTbcFQBdXSYTsEeMsUOfrzrmPH451fngepPaiT0wJ2RU11su9FD5/pub?output=csv</code></p>
-        </div>
-
-        <div class="upload-section">
-            <h3 style="margin-bottom: 15px;">📤 Upload CSV dari Google Sheets</h3>
-            <p style="color: #666; margin-bottom: 15px;">Download CSV dari link di atas, lalu upload di sini:</p>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFileInput').click()">
-                <p style="font-size: 18px; margin-bottom: 10px;">🗂️ Click atau Drag & Drop CSV File</p>
-                <p style="font-size: 14px; color: #666;">File CSV dari Google Sheets</p>
-                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-            </div>
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Loading data dari Google Sheets...</p>
         </div>
 
         <div id="errorMessage" style="display: none;"></div>
 
         <div id="dashboardContent" style="display: none;">
             <div class="data-source-info">
-                <span>Data loaded: <span id="lastUpdate">-</span></span>
-                <span style="font-size: 11px; color: #666;"><span id="rowCount">0</span> projects</span>
+                <span>📊 Data source: Google Sheets | Last updated: <span id="lastUpdate">-</span></span>
+                <span style="font-size: 11px; color: #666;"><span id="rowCount">0</span> projects loaded</span>
             </div>
 
             <div class="kpi-cards">
@@ -248,114 +235,105 @@
     </div>
 
     <script>
+        var SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSE4iCfy-ul3AvvtRn8crrMl-U8XTbcFQBdXSYTsEeMsUOfrzrmPH451fngepPaiT0wJ2RU11su9FD5/pub?output=csv';
         var SKIP_ROWS = 2;
         var projects = [];
         var currentEditId = null;
         var currentProjectNotes = [];
         var currentFilter = 'all';
+        var isLoading = false;
 
-        // Load from localStorage on start
-        var savedData = localStorage.getItem('projectsData');
-        if (savedData) {
-            projects = JSON.parse(savedData);
-            document.getElementById('dashboardContent').style.display = 'block';
-            document.getElementById('lastUpdate').textContent = localStorage.getItem('lastUpdate') || 'Cached';
-            document.getElementById('rowCount').textContent = projects.length;
-            initDashboard();
-        }
+        function loadGoogleSheetData() {
+            if (isLoading) return;
 
-        // File upload handling
-        var uploadArea = document.getElementById('uploadArea');
-        var fileInput = document.getElementById('csvFileInput');
+            isLoading = true;
+            var refreshBtn = document.getElementById('refreshBtn');
+            var refreshIcon = document.getElementById('refreshIcon');
+            var refreshText = document.getElementById('refreshText');
 
-        uploadArea.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
+            refreshBtn.disabled = true;
+            refreshIcon.classList.add('spinning');
+            refreshText.textContent = 'Loading...';
 
-        uploadArea.addEventListener('dragleave', function(e) {
-            uploadArea.classList.remove('dragover');
-        });
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
 
-        uploadArea.addEventListener('drop', function(e) {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            var files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFile(files[0]);
-            }
-        });
+            fetch(SHEET_URL)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('Failed to fetch: ' + response.status);
+                    return response.text();
+                })
+                .then(function(csvText) {
+                    var rows = parseCSV(csvText);
 
-        fileInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        });
+                    console.log('Total rows:', rows.length);
 
-        function handleFile(file) {
-            if (!file.name.endsWith('.csv')) {
-                showError('Please upload a CSV file');
-                return;
-            }
+                    if (rows.length < SKIP_ROWS + 2) {
+                        throw new Error('Data terlalu sedikit: ' + rows.length + ' rows');
+                    }
 
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var csvText = e.target.result;
-                parseAndLoadData(csvText);
-            };
-            reader.readAsText(file);
-        }
+                    var headers = rows[SKIP_ROWS];
+                    console.log('Headers:', headers);
 
-        function parseAndLoadData(csvText) {
-            try {
-                var rows = parseCSV(csvText);
+                    projects = [];
+                    for (var i = SKIP_ROWS + 1; i < rows.length; i++) {
+                        var row = rows[i];
+                        if (!row[0] || row[0].trim() === '') continue;
 
-                console.log('Total rows:', rows.length);
+                        var project = {
+                            id: i,
+                            name: row[0] || 'Unnamed',
+                            pic: row[1] || 'TBA',
+                            progress: parseFloat(row[2]) || 0,
+                            status: normalizeStatus(row[3]),
+                            budget: row[4] || '0',
+                            notes: parseNotes(row[5])
+                        };
+                        projects.push(project);
+                    }
 
-                if (rows.length < SKIP_ROWS + 2) {
-                    throw new Error('Data terlalu sedikit: ' + rows.length + ' rows');
-                }
+                    console.log('Projects loaded:', projects.length);
 
-                var headers = rows[SKIP_ROWS];
-                console.log('Headers:', headers);
+                    if (projects.length === 0) {
+                        throw new Error('Tidak ada data project valid');
+                    }
 
-                projects = [];
-                for (var i = SKIP_ROWS + 1; i < rows.length; i++) {
-                    var row = rows[i];
-                    if (!row[0] || row[0].trim() === '') continue;
+                    localStorage.setItem('projectsData', JSON.stringify(projects));
+                    localStorage.setItem('lastUpdate', new Date().toLocaleString('id-ID'));
 
-                    var project = {
-                        id: i,
-                        name: row[0] || 'Unnamed',
-                        pic: row[1] || 'TBA',
-                        progress: parseFloat(row[2]) || 0,
-                        status: normalizeStatus(row[3]),
-                        budget: row[4] || '0',
-                        notes: parseNotes(row[5])
-                    };
-                    projects.push(project);
-                }
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('dashboardContent').style.display = 'block';
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleString('id-ID');
+                    document.getElementById('rowCount').textContent = projects.length;
 
-                console.log('Projects loaded:', projects.length);
+                    showSuccess('Berhasil memuat ' + projects.length + ' projects dari Google Sheets!');
+                    initDashboard();
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    document.getElementById('loadingIndicator').style.display = 'none';
 
-                if (projects.length === 0) {
-                    throw new Error('Tidak ada data project valid');
-                }
+                    var savedData = localStorage.getItem('projectsData');
+                    if (savedData) {
+                        projects = JSON.parse(savedData);
+                        document.getElementById('dashboardContent').style.display = 'block';
 
-                localStorage.setItem('projectsData', JSON.stringify(projects));
-                localStorage.setItem('lastUpdate', new Date().toLocaleString('id-ID'));
+                        var lastUpdate = localStorage.getItem('lastUpdate') || 'Unknown';
+                        document.getElementById('lastUpdate').textContent = lastUpdate + ' (Cached)';
+                        document.getElementById('rowCount').textContent = projects.length;
 
-                document.getElementById('dashboardContent').style.display = 'block';
-                document.getElementById('lastUpdate').textContent = new Date().toLocaleString('id-ID');
-                document.getElementById('rowCount').textContent = projects.length;
-
-                showSuccess('Berhasil memuat ' + projects.length + ' projects!');
-                initDashboard();
-
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Error parsing CSV: ' + error.message);
-            }
+                        showError('Tidak dapat mengambil data terbaru. Menampilkan data cache. Error: ' + error.message);
+                        initDashboard();
+                    } else {
+                        showError('Gagal memuat data dari Google Sheets. Error: ' + error.message + '<br><br>Pastikan:<br>1. Google Sheets sudah dipublikasikan<br>2. Link CSV benar<br>3. Ada data di sheet');
+                    }
+                })
+                .finally(function() {
+                    isLoading = false;
+                    refreshBtn.disabled = false;
+                    refreshIcon.classList.remove('spinning');
+                    refreshText.textContent = 'Refresh Data';
+                });
         }
 
         function parseCSV(text) {
@@ -420,6 +398,7 @@
             var errorDiv = document.getElementById('errorMessage');
             errorDiv.innerHTML = '<div class="error-message">' + message + '</div>';
             errorDiv.style.display = 'block';
+            setTimeout(function() { errorDiv.style.display = 'none'; }, 10000);
         }
 
         function showSuccess(message) {
@@ -487,7 +466,7 @@
                 html += '<td><div style="display:flex;align-items:center;gap:10px;"><div class="progress-bar" style="flex:1;"><div class="progress-fill" style="width:' + p.progress + '%"></div></div><span style="font-size:12px;font-weight:600;">' + p.progress + '%</span></div></td>';
                 html += '<td><span class="status-badge status-' + p.status + '">' + getStatusText(p.status) + '</span></td>';
                 html += '<td>' + p.budget + '</td>';
-                html += '<td><div class="action-icons"><button class="icon-btn" onclick="editProject(' + p.id + ')">Edit</button><button class="icon-btn" onclick="deleteProject(' + p.id + ')">Delete</button></div></td>';
+                html += '<td><div class="action-icons"><button class="icon-btn" onclick="editProject(' + p.id + ')">✏️</button><button class="icon-btn" onclick="viewNotes(' + p.id + ')">📝</button><button class="icon-btn" onclick="deleteProject(' + p.id + ')">🗑️</button></div></td>';
                 html += '</tr>';
             }
             tbody.innerHTML = html;
@@ -570,8 +549,12 @@
             }
         }
 
+        function viewNotes(id) {
+            editProject(id);
+        }
+
         function deleteProject(id) {
-            if (confirm('Hapus project ini?')) {
+            if (confirm('Hapus project ini? (Perubahan hanya di browser, tidak mengubah Google Sheets)')) {
                 var newProjects = [];
                 for (var i = 0; i < projects.length; i++) {
                     if (projects[i].id !== id) newProjects.push(projects[i]);
@@ -643,7 +626,7 @@
             localStorage.setItem('projectsData', JSON.stringify(projects));
             closeProjectModal();
             initDashboard();
-            showSuccess('Data tersimpan');
+            showSuccess('Data tersimpan (hanya di browser)');
         });
 
         window.onclick = function(event) {
@@ -651,6 +634,20 @@
                 closeProjectModal();
             }
         }
+
+        // Load data on startup
+        window.addEventListener('DOMContentLoaded', function() {
+            var savedData = localStorage.getItem('projectsData');
+            if (savedData) {
+                projects = JSON.parse(savedData);
+                document.getElementById('dashboardContent').style.display = 'block';
+                document.getElementById('lastUpdate').textContent = localStorage.getItem('lastUpdate') + ' (Cached)';
+                document.getElementById('rowCount').textContent = projects.length;
+                initDashboard();
+            }
+
+            loadGoogleSheetData();
+        });
     </script>
 </body>
 </html>
